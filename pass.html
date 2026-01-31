@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LOVE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Mali&display=swap" rel="stylesheet">
+    <style>
+        /* base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            height: 100%
+        }
+
+        body {
+            font-family: 'Mali', cursive;
+            background: linear-gradient(to right, #FDC7D7, #FFFFFF, #FDC7D7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 28px 16px;
+            gap: 22px;
+        }
+
+        /* card */
+        .card {
+            width: min(500px, 92vw);
+            background: #E86C8D;
+            color: #fff;
+            border-radius: 28px;
+            padding: 36px 46px 32px;
+            box-shadow: 0 14px 40px rgba(0, 0, 0, .15);
+        }
+
+        .h-1 {
+            font-size: 28px;
+            margin-bottom: 6px
+        }
+
+        .hint {
+            font-size: 14px;
+            opacity: .9;
+            margin-bottom: 22px
+        }
+
+        /* otp inputs */
+        .inputs {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+        }
+
+        .otp {
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 12px;
+            background: #ffffff;
+            text-align: center;
+            font-size: 24px;
+            color: #E86C8D;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, .08);
+            transition: transform .06s ease;
+        }
+
+        .otp:focus {
+            outline: 3px solid #FFD6E1
+        }
+
+        /* ข้อความผิดพลาด (อยู่ในการ์ด ใต้ช่องรหัส) */
+        .error-inline {
+            margin-top: 14px;
+            font-size: 14px;
+            color: #FFFFFF;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity .18s ease, transform .18s ease;
+            height: 20px;
+            /* กันกระโดดเลย์เอาต์ */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .error-inline.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* เขย่าเมื่อผิด */
+        @keyframes shake {
+
+            10%,
+            90% {
+                transform: translateX(-2px);
+            }
+
+            20%,
+            80% {
+                transform: translateX(4px);
+            }
+
+            30%,
+            50%,
+            70% {
+                transform: translateX(-6px);
+            }
+
+            40%,
+            60% {
+                transform: translateX(6px);
+            }
+        }
+
+        .shake {
+            animation: shake .4s both;
+        }
+
+        /* ปุ่มด้านนอกการ์ด */
+        .btn {
+            display: inline-block;
+            background: #E86C8D;
+            color: #fff;
+            text-decoration: none;
+            padding: 12px 34px;
+            border-radius: 999px;
+            font-size: large;
+            box-shadow: 0 10px 24px rgba(232, 108, 141, .35);
+            transition: transform .06s ease, filter .15s ease, box-shadow .15s ease;
+        }
+
+        .btn:hover {
+            filter: brightness(.96);
+            transform: translateY(-1px)
+        }
+
+        .btn:active {
+            transform: none;
+            box-shadow: 0 8px 18px rgba(232, 108, 141, .28)
+        }
+
+
+
+
+
+        @supports (padding: max(0px)) {
+            body {
+                padding-left: max(28px, env(safe-area-inset-left));
+                padding-right: max(28px, env(safe-area-inset-right));
+                padding-top: max(28px, env(safe-area-inset-top));
+                padding-bottom: max(28px, env(safe-area-inset-bottom));
+            }
+        }
+
+        /* ---------- โทรศัพท์เล็กมาก (≤ 360px) ---------- */
+        @media (max-width: 360px) {
+            body {
+                gap: 16px;
+                padding: 22px 14px;
+            }
+
+            .card {
+                width: min(94vw, 420px);
+                padding: 26px 24px 24px;
+                border-radius: 22px;
+                box-shadow: 0 10px 28px rgba(0, 0, 0, .14);
+            }
+
+            .h-1 {
+                font-size: 22px;
+                margin-bottom: 4px;
+            }
+
+            .hint {
+                font-size: 12px;
+                margin-bottom: 16px;
+            }
+
+            .inputs {
+                gap: 10px;
+            }
+
+            .otp {
+                width: 48px;
+                height: 54px;
+                font-size: 22px;
+                border-radius: 10px;
+            }
+
+            .error-inline {
+                font-size: 12px;
+                height: 18px;
+                margin-top: 10px;
+            }
+
+            .btn {
+                font-size: 15px;
+                padding: 10px 22px;
+            }
+        }
+
+        /* ---------- โทรศัพท์ทั่วไป (361–480px) ---------- */
+        @media (min-width: 361px) and (max-width: 480px) {
+            body {
+                gap: 18px;
+                padding: 24px 16px;
+            }
+
+            .card {
+                width: min(92vw, 480px);
+                padding: 30px 28px 26px;
+                border-radius: 24px;
+            }
+
+            .h-1 {
+                font-size: 24px;
+            }
+
+            .hint {
+                font-size: 13px;
+                margin-bottom: 18px;
+            }
+
+            .inputs {
+                gap: 12px;
+            }
+
+            .otp {
+                width: 54px;
+                height: 58px;
+                font-size: 23px;
+            }
+
+            .btn {
+                font-size: 16px;
+                padding: 11px 26px;
+            }
+        }
+
+        /* ---------- มือถือจอใหญ่ / Phablet (481–599px) ---------- */
+        @media (min-width: 481px) and (max-width: 599px) {
+            .card {
+                width: min(88vw, 520px);
+                padding: 32px 36px 28px;
+            }
+
+            .h-1 {
+                font-size: 26px;
+            }
+
+            .hint {
+                font-size: 14px;
+            }
+
+            .inputs {
+                gap: 14px;
+            }
+
+            .otp {
+                width: 58px;
+                height: 62px;
+                font-size: 24px;
+            }
+
+            .btn {
+                font-size: 17px;
+                padding: 12px 30px;
+            }
+        }
+
+        /* ---------- iPad / Tablet (600–1024px) ---------- */
+        @media (min-width: 600px) and (max-width: 1024px) {
+            body {
+                gap: 22px;
+                padding: 32px 28px;
+            }
+
+            .card {
+                width: min(80vw, 560px);
+                padding: 36px 44px 32px;
+                border-radius: 28px;
+                box-shadow: 0 14px 40px rgba(0, 0, 0, .15);
+            }
+
+            .h-1 {
+                font-size: 28px;
+            }
+
+            .hint {
+                font-size: 15px;
+                margin-bottom: 22px;
+            }
+
+            .inputs {
+                gap: 16px;
+            }
+
+            .otp {
+                width: 64px;
+                height: 68px;
+                font-size: 26px;
+            }
+
+            .btn {
+                font-size: 18px;
+                padding: 13px 34px;
+            }
+        }
+
+        /* ---------- แนวนอนความสูงน้อย (Landscape/จอเตี้ย) ---------- */
+        @media (orientation: landscape) and (max-height: 420px) {
+            body {
+                gap: 12px;
+                padding-top: 16px;
+                padding-bottom: 16px;
+            }
+
+            .card {
+                width: min(86vw, 600px);
+                padding: 22px 20px 18px;
+                border-radius: 20px;
+            }
+
+            .h-1 {
+                font-size: 20px;
+                margin-bottom: 2px;
+            }
+
+            .hint {
+                font-size: 12px;
+                margin-bottom: 12px;
+            }
+
+            .inputs {
+                gap: 8px;
+            }
+
+            .otp {
+                width: 44px;
+                height: 48px;
+                font-size: 20px;
+            }
+
+            .btn {
+                font-size: 14px;
+                padding: 8px 18px;
+            }
+        }
+
+        /* ---------- ผู้ใช้ลด Motion ---------- */
+        @media (prefers-reduced-motion: reduce) {
+
+            .otp,
+            .btn {
+                transition: none !important;
+            }
+
+            .shake {
+                animation: none !important;
+            }
+        }
+
+        /* โทรศัพท์เล็กมาก (≤ 360px) */
+        @media (max-width: 360px) {
+            .card {
+                width: min(96vw, 420px);
+                padding: 20px 16px 18px;
+                /* ลด padding เพื่อเพิ่มพื้นที่เนื้อใน */
+            }
+
+            .inputs {
+                display: grid;
+                /* เปลี่ยนจาก flex เป็น grid */
+                grid-template-columns: repeat(6, 1fr);
+                gap: 8px;
+                /* ช่องว่างย่อให้สมดุล */
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .otp {
+                width: 100%;
+                /* ให้กว้างเต็ม cell */
+                height: auto;
+                aspect-ratio: 1 / 1;
+                /* ทำให้เป็นสี่เหลี่ยมจัตุรัส */
+                font-size: clamp(16px, 6.2vw, 20px);
+                border-radius: 10px;
+            }
+
+            .h-1 {
+                font-size: 20px;
+                margin-bottom: 2px;
+            }
+
+            .hint {
+                font-size: 12px;
+                margin-bottom: 12px;
+            }
+
+            .error-inline {
+                font-size: 12px;
+                height: 18px;
+                margin-top: 8px;
+            }
+
+            .btn {
+                font-size: 14px;
+                padding: 8px 18px;
+            }
+        }
+
+        /* โทรศัพท์ทั่วไป (361–480px) */
+        @media (min-width: 361px) and (max-width: 480px) {
+            .card {
+                width: min(94vw, 480px);
+                padding: 24px 18px 20px;
+            }
+
+            .inputs {
+                display: grid;
+                grid-template-columns: repeat(6, 1fr);
+                gap: 10px;
+                width: 100%;
+            }
+
+            .otp {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 1 / 1;
+                font-size: clamp(18px, 5.4vw, 22px);
+            }
+        }
+
+        /* แนวนอนความสูงน้อย — กันล้นเวลาเอียงเครื่อง */
+        @media (orientation: landscape) and (max-height: 420px) {
+            .inputs {
+                display: grid;
+                grid-template-columns: repeat(6, 1fr);
+                gap: 8px;
+            }
+
+            .otp {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 1 / 1;
+                font-size: clamp(14px, 2.2vh, 18px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- การ์ด -->
+    <section class="card" aria-label="กรอกรหัสผ่าน 6 หลัก">
+        <p class="h-1">กรอกรหัสผ่าน</p>
+        <!-- อิอิ -->
+        <p class="hint">คำใบ้ : วันครบรอบของเรา🐾</p>
+
+        <div class="inputs" id="inputsRow">
+            <input class="otp" type="password" inputmode="numeric" maxlength="1" aria-label="หลักที่ 1">
+            <input class="otp" type="password" inputmode="numeric" maxlength="1" aria-label="หลักที่ 2">
+            <input class="otp" type="password" inputmode="numeric" maxlength="1" aria-label="หลักที่ 3">
+            <input class="otp" type="password" inputmode="numeric" maxlength="1" aria-label="หลักที่ 4">
+            <input class="otp" type="password" inputmode="numeric" maxlength="1" aria-label="หลักที่ 5">
+            <input class="otp" type="password" inputmode="numeric" maxlength="1" aria-label="หลักที่ 6">
+        </div>
+
+        <!-- ข้อความแสดงเมื่อรหัสไม่ถูกต้อง (ในการ์ด) -->
+        <div class="error-inline" id="errorInline" aria-live="polite">รหัสไม่ถูกต้อง</div>
+    </section>
+
+    <!-- ปุ่มด้านนอกการ์ด -->
+    <a href="flower.html" id="submitBtn" class="btn" role="button">ยืนยัน</a>
+
+    <script>
+        // ===== ตั้งค่า =====
+        const CORRECT = "170224";          // รหัสที่ถูกต้อง (6 หลัก)
+        const SUCCESS_HREF = "flower.html";   // ลิงก์เมื่อรหัสถูก
+
+        const inputs = Array.from(document.querySelectorAll('.otp'));
+        const submitBtn = document.getElementById('submitBtn');
+        const errorInline = document.getElementById('errorInline');
+        const inputsRow = document.getElementById('inputsRow');
+
+        inputs[0].focus();
+
+        // auto-advance, backspace, paste
+        inputs.forEach((el, i) => {
+            el.addEventListener('input', () => {
+                el.value = el.value.replace(/\D/g, '').slice(0, 1);
+                if (el.value && i < inputs.length - 1) inputs[i + 1].focus();
+            });
+            el.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !el.value && i > 0) {
+                    inputs[i - 1].focus();
+                    inputs[i - 1].value = '';
+                }
+                if (e.key === 'Enter') checkCode();
+            });
+            el.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+                if (!text) return;
+                for (let k = 0; k < inputs.length; k++) inputs[k].value = text[k] || '';
+                (text.length >= 6 ? submitBtn : inputs[Math.min(text.length, 5)]).focus();
+            });
+        });
+
+        submitBtn.addEventListener('click', (e) => { e.preventDefault(); checkCode(); });
+
+        function checkCode() {
+            const entered = inputs.map(i => i.value).join('');
+            if (entered === CORRECT) {
+                window.location.href = SUCCESS_HREF;
+            } else {
+                // แสดงข้อความในการ์ด + เขย่าช่อง
+                errorInline.classList.add('show');
+                inputsRow.classList.remove('shake');
+                // trigger reflow สำหรับรีสตาร์ทแอนิเมชัน
+                void inputsRow.offsetWidth;
+                inputsRow.classList.add('shake');
+
+                setTimeout(() => errorInline.classList.remove('show'), 2000);
+
+                inputs.forEach(i => i.value = '');
+                inputs[0].focus();
+            }
+        }
+    </script>
+</body>
+
+</html>

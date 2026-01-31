@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <title>LOVE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Mali', cursive;
+            background: linear-gradient(to right, #FDC7D7, #FFFFFF, #FDC7D7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        /* การ์ดหลัก */
+        .card {
+            background: #fff;
+            border-radius: 25px;
+            padding: 40px 60px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border: 2px solid #E86C8D;
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .wheel-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        h1 {
+            color: #5C3A42;
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            margin-bottom: 10px;
+            color: #7C6270;
+            font-size: 14px;
+        }
+
+        /* วงล้อ */
+        .wheel-container {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            margin: 10px 0;
+        }
+
+        .wheel {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 4px solid #E86C8D;
+            /* 6 Segments: 360/6 = 60 องศาต่อชิ้น */
+            background: conic-gradient(#FFD6F4 0deg 60deg,
+                    #C8F4FF 60deg 120deg,
+                    #FFECC7 120deg 180deg,
+                    #FFC2D1 180deg 240deg,
+                    #CDEAC0 240deg 300deg,
+                    #E2D4FF 300deg 360deg);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+            transition: transform 4s cubic-bezier(.17, .67, .35, 1.28);
+        }
+
+        /* ลบสไตล์ .segment และ .segment-content ออกตามคำขอ */
+
+        .pointer {
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 14px solid transparent;
+            border-right: 14px solid transparent;
+            border-bottom: 22px solid #E86C8D;
+            filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .18));
+            z-index: 10;
+        }
+
+        .status {
+            font-size: 14px;
+            color: #5C3A42;
+            min-height: 22px;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        button {
+            font-family: 'Mali', cursive;
+            padding: 8px 18px;
+            border-radius: 999px;
+            border: none;
+            background: #E86C8D;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 6px 18px rgba(232, 108, 141, 0.35);
+            transition: 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 22px rgba(232, 108, 141, 0.45);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: default;
+        }
+
+        /* ============================
+            Popup
+        ============================ */
+        .result-popup {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .35);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .result-popup.show {
+            display: flex;
+        }
+
+        .result-box {
+            background: #FFF9FF;
+            padding: 28px 34px 26px;
+            border-radius: 24px;
+            text-align: center;
+            width: min(320px, 90%);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+            position: relative;
+            overflow: hidden;
+            animation: fadeIn .35s ease;
+        }
+
+        .result-title {
+            color: #E86C8D;
+            font-size: 20px;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        .result-message {
+            color: #5C3A42;
+            font-size: 17px;
+            margin-bottom: 18px;
+        }
+
+        .result-close {
+            font-family: 'Mali', cursive;
+            padding: 10px 24px;
+            border-radius: 999px;
+            border: none;
+            background: #E86C8D;
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 6px 18px rgba(232, 108, 141, 0.35);
+        }
+
+        .result-close:hover {
+            transform: translateY(-1px);
+        }
+
+        /* หัวใจลอย ๆ ใน popup ผลลัพธ์ */
+        .h {
+            position: absolute;
+            font-size: 18px;
+            opacity: 0;
+            animation: floatHeart 2.5s ease-in-out infinite;
+        }
+
+        /* ตำแหน่ง + delay แต่ละดวง */
+        .h.h1 {
+            left: 15%;
+            bottom: -10px;
+            animation-delay: 0s;
+        }
+
+        .h.h2 {
+            right: 10%;
+            bottom: -10px;
+            animation-delay: 0.4s;
+        }
+
+        .h.h3 {
+            left: 50%;
+            bottom: -10px;
+            animation-delay: 0.8s;
+        }
+
+        /* keyframes ให้หัวใจลอยขึ้น */
+        @keyframes floatHeart {
+            0% {
+                transform: translateY(0) scale(0.9);
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            80% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-80px) scale(1.2);
+                opacity: 0;
+            }
+        }
+
+
+        /* ============================
+            Responsive Breakpoints
+        ============================ */
+
+        /* ---------- โทรศัพท์เล็กมาก (≤ 360px) ---------- */
+        @media (max-width: 360px) {
+
+            .card {
+                width: min(94vw, 520px);
+                padding: 24px 18px;
+                border-radius: 20px;
+                box-shadow: 0 8px 20px rgba(0, 0, 0, .12);
+            }
+
+            h1 {
+                font-size: 18px;
+                margin-bottom: 6px;
+            }
+
+            .subtitle {
+                font-size: 13px;
+                margin-bottom: 8px;
+            }
+
+            .wheel-container {
+                width: 200px;
+                height: 200px;
+            }
+
+            .wheel {
+                border-width: 3px;
+            }
+
+            .status {
+                font-size: 13px;
+            }
+
+            button {
+                font-size: 15px;
+                padding: 7px 16px;
+            }
+
+            .result-box {
+                width: 88%;
+                padding: 24px 20px;
+            }
+
+            .result-title {
+                font-size: 18px;
+            }
+
+            .result-message {
+                font-size: 15px;
+            }
+
+            .result-close {
+                font-size: 16px;
+                padding: 8px 20px;
+            }
+        }
+
+
+
+        /* ---------- โทรศัพท์ทั่วไป (361–480px) ---------- */
+        @media (min-width: 361px) and (max-width: 480px) {
+
+            .card {
+                width: min(92vw, 560px);
+                padding: 28px 22px;
+                border-radius: 22px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            .wheel-container {
+                width: 225px;
+                height: 225px;
+            }
+
+            .result-box {
+                width: 85%;
+                padding: 26px 22px;
+            }
+        }
+
+
+        /* ---------- มือถือจอใหญ่ / Phablet (481–599px) ---------- */
+        @media (min-width: 481px) and (max-width: 599px) {
+
+            .card {
+                width: min(88vw, 600px);
+                padding: 32px 30px;
+                border-radius: 24px;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+
+            .wheel-container {
+                width: 250px;
+                height: 250px;
+            }
+
+            .result-box {
+                width: 80%;
+                padding: 30px 28px;
+            }
+        }
+
+
+
+        /* ---------- Tablet (600–1024px) ---------- */
+        @media (min-width: 600px) and (max-width: 1024px) {
+
+            .card {
+                width: min(76vw, 680px);
+                padding: 36px 40px;
+                border-radius: 25px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .wheel-container {
+                width: 280px;
+                height: 280px;
+            }
+
+            .result-box {
+                width: 75%;
+                padding: 32px 30px;
+            }
+        }
+
+
+        /* ---------- แนวนอนความสูงน้อย (Landscape ≤420px) ---------- */
+        @media (orientation: landscape) and (max-height: 420px) {
+
+            body {
+                padding-top: 12px;
+                padding-bottom: 12px;
+                justify-content: flex-start;
+            }
+
+            .card {
+                width: min(86vw, 640px);
+                padding: 20px 18px;
+                border-radius: 18px;
+            }
+
+            .wheel-container {
+                width: 180px;
+                height: 180px;
+                margin: 6px 0;
+            }
+
+            h1 {
+                font-size: 18px;
+            }
+
+            .result-box {
+                width: 80%;
+                padding: 22px 20px;
+            }
+
+            .result-message {
+                font-size: 15px;
+            }
+        }
+
+
+
+        /* ---------- ผู้ใช้ที่ลด Motion ---------- */
+        @media (prefers-reduced-motion: reduce) {
+            .wheel {
+                transition: none !important;
+            }
+
+            .result-box {
+                animation: none !important;
+            }
+
+            button {
+                transition: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card wheel-wrapper">
+        <h1>วงล้อตามใจ</h1>
+        <p class="subtitle">หมุนวงล้อแล้วแคปผลส่งมาได้เลย</p>
+
+        <div class="wheel-container">
+            <div class="pointer"></div>
+            <div id="wheel" class="wheel">
+            </div>
+        </div>
+
+        <div class="status" id="statusText">กด "หมุนวงล้อ" เพื่อเริ่มเล่น</div>
+
+        <div class="btn-row">
+            <button id="spinBtn">หมุนวงล้อ</button>
+            <button onclick="window.location.href='menu.html'">กลับไปหน้าเมนู</button>
+        </div>
+    </div>
+
+    <div id="resultPopup" class="result-popup">
+        <div class="result-box">
+
+            <div class="h h1">💖</div>
+            <div class="h h2">💕</div>
+            <div class="h h3">💘</div>
+
+
+            <div class="result-title">ผลลัพธ์ของวงล้อคือ…</div>
+            <div id="popupResult" class="result-message"></div>
+
+            <button class="result-close" onclick="closePopup()">ปิด</button>
+        </div>
+    </div>
+
+    <script>
+        const wheel = document.getElementById('wheel');
+        const spinBtn = document.getElementById('spinBtn');
+        const statusText = document.getElementById('statusText');
+
+        const resultPopup = document.getElementById("resultPopup");
+        const popupResult = document.getElementById("popupResult");
+
+        // ตัวเลือก (6 ชิ้น)
+        // อิอิ
+        const options = [
+            "เลี้ยงอาหารอย่อยๆ",
+            "ซื้อเกมให้งบ 500",
+            "ตามใจ 1 วัน",
+            "เลี้ยงชานม/ขนมหวาน",
+            "ให้กิงเป๊ปซี่ได้",
+            "ให้เล่นเกม 1 วีคเต็มแบบไม่งอแง"
+        ];
+
+
+        let isSpinning = false;
+        let currentRotation = 0;
+
+        // *** ลบฟังก์ชัน createWheelSegments() ออกตามคำขอ ***
+
+        spinBtn.addEventListener('click', () => {
+            if (isSpinning) return;
+            isSpinning = true;
+            spinBtn.disabled = true;
+            statusText.textContent = 'กำลังหมุนอยู่น้า รอดูผลลัพธ์แปบเดียวว';
+
+            const segments = options.length;
+            const segmentAngle = 360 / segments;
+
+            // สุ่มตำแหน่งที่จะหยุด (0-5)
+            const selectedIndex = Math.floor(Math.random() * segments);
+
+            // 3-5 รอบเต็ม
+            const extraTurns = 3 + Math.floor(Math.random() * 3);
+
+            // ตัวชี้ (Pointer) อยู่ที่ 12 นาฬิกา (0 องศา) แต่โค้ดคำนวณจาก 3 นาฬิกา (90 องศา) 
+            const pointerAngle = 90;
+
+            // คำนวณจุดกึ่งกลางของชิ้นส่วนที่เลือก
+            const targetSegmentCenter = selectedIndex * segmentAngle + segmentAngle / 2;
+
+            // คำนวณการหมุน
+            const finalRotation =
+                currentRotation +
+                extraTurns * 360 +
+                (pointerAngle - targetSegmentCenter);
+
+            currentRotation = finalRotation;
+            wheel.style.transform = `rotate(${finalRotation}deg)`;
+        });
+
+        wheel.addEventListener('transitionend', () => {
+            const segments = options.length;
+            const segmentAngle = 360 / segments;
+            const pointerAngle = 90;
+
+            // แปลง currentRotation ให้อยู่ในช่วง 0-359 องศา (ทวนเข็มนาฬิกา)
+            let normalized = ((currentRotation % 360) + 360) % 360;
+
+            // คำนวณมุมที่ชี้ตรงตัวชี้
+            const angleAtPointer = (pointerAngle - normalized + 360) % 360;
+
+            // หา index ของชิ้นส่วนที่ถูกชี้
+            const index = Math.floor(angleAtPointer / segmentAngle);
+
+            const choice = options[index];
+
+            // เปิด popup
+            popupResult.textContent = choice;
+            resultPopup.classList.add("show");
+            statusText.textContent = `ผลลัพธ์คือ: ${choice}!`;
+
+            spinBtn.disabled = false;
+            isSpinning = false;
+        });
+
+        function closePopup() {
+            resultPopup.classList.remove("show");
+        }
+
+        // *** ลบ Event Listener สำหรับ resize ออกตามคำขอ ***
+    </script>
+
+</body>
+
+</html>
